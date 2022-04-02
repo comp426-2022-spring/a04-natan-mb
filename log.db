@@ -1,0 +1,11 @@
+CREATE TABLE accesslog (
+    remoteaddr INT,
+    remoteuser VARCHAR(20),
+    time CURRENT_TIME,
+    method VARCHAR(20),
+    url VARCHAR(30),
+    protocol VARCHAR(20),
+    httpversion DECIMAL(2,2),
+    
+
+);
