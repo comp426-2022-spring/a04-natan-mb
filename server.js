@@ -23,7 +23,6 @@ if (args.help) {
     process.exit()
 }
 
-const call = args.call
 args['port']
 const port = args.port || process.env.PORT || 5000
 
@@ -43,7 +42,7 @@ const debugEnabled = (args.debug == undefined ? false : args.debug)
 const logger = function(req, res, next) {
     let logdata = {
         remoteaddr: req.ip,
-        remoteuser: (req.user),
+        remoteuser: req.user,
         time: Date.now(),
         method: req.method,
         url: req.url,
@@ -55,15 +54,25 @@ const logger = function(req, res, next) {
         useragent: req.headers['user-agent']
     }
 
-    //console.log(typeof logdata.remoteuser)
+    const stmt = db.prepare(`
+        INSERT INTO accesslog
+        VALUES (
+            @remoteaddr,
+            @remoteuser,
+            @time,
+            @method,
+            @url,
+            @protocol,
+            @httpversion,
+            @secure,
+            @status,
+            @referer,
+            @useragent
+        )
+    `)
+    
+    stmt.run(logdata)
 
-    const stmt = db.prepare('INSERT INTO accesslog VALUES (@remoteaddr, @remoteuser, @time, @method, @url, @protocol, @httpversion, @secure, @status, @referer, @useragent)')
-
-    const info = stmt.run(logdata)
-
-    // const stmt = db.prepare('INSERT INTO accesslog (secure) VALUES (?)')
-    // const info = stmt.run(logdata.secure)
-    //res.status(200).json(info)
     next()
 }
 
@@ -78,7 +87,6 @@ const server = app.listen(port, () => {
 });
 
 
-
 // Define check endpoint
 app.get('/app/', (req, res) => {
     // Respond with status 200
@@ -91,33 +99,69 @@ app.get('/app/', (req, res) => {
 });
 
 
-
-app.get('/app/types/', (req, res) => {
-    console.log(typeof req.ip);
-    console.log(req.user);
-    console.log(Date.now());
-    console.log(req.method);
-    console.log(typeof req.url);
-    console.log(typeof req.protocol);
-    console.log(typeof req.httpVersion);
-    console.log(typeof req.secure);
-    console.log(typeof res.statusCode);
-    console.log(req.headers['referer']);
-    console.log(typeof req.headers['user-agent']);
-
-    res.sendStatus(200)
-});
-
-
-function coinFlip() {
-    return Math.floor(Math.random() * 2) < 1 ? 'heads' : 'tails';
-}
-
-
+// Simulate a single coin flip
 app.get('/app/flip/', (req, res) => {
     res.send({ flip: coinFlip() });
 });
 
+
+// Simulate multiple coin flips
+app.get('/app/flips/:number', (req, res) => {
+    res.send(coinFlips(req.params.number));
+});
+
+
+// Call heads and simulate a coin flip
+app.get('/app/flip/call/heads', (req, res) => {
+    res.send(flipACoin('heads'));
+});
+
+
+// Call tails and simulate a coin flip
+app.get('/app/flip/call/tails', (req, res) => {
+    res.send(flipACoin('tails'));
+});
+
+
+// Debugging endpoints
+if (debugEnabled) {
+
+    // Get log data
+    app.get('/app/log/access/',  (req, res) => {
+        try {
+            const stmt = db.prepare('SELECT * FROM accesslog').all()
+            res.status(200).json(stmt)
+        } catch {
+            console.error('could not retrieve database')
+        }
+    });
+
+    
+    // Perform error test
+    app.get('/app/error',  (req, res) => {
+        throw new Error('Error test successful.')
+    });
+
+}
+
+
+// Default response for any other request
+app.use(function (req, res) {
+    res.status(404).send('404 NOT FOUND')
+});
+
+process.on('SIGTERM', () => {
+    server.close(() => {
+        console.log('Server stopped')
+    })
+})
+
+
+// Coin flip functions
+
+function coinFlip() {
+    return Math.floor(Math.random() * 2) < 1 ? 'heads' : 'tails';
+}
 
 function coinFlips(flips) {
     const flipResults = [];
@@ -153,12 +197,6 @@ function countFlips(array) {
 
 }
 
-
-app.get('/app/flips/:number', (req, res) => {
-    res.send(coinFlips(req.params.number));
-});
-
-
 function flipACoin(call) {
     var result = coinFlip();
 
@@ -170,46 +208,3 @@ function flipACoin(call) {
 
     return output;
 }
-
-
-app.get('/app/flip/call/heads', (req, res) => {
-    res.send(flipACoin('heads'));
-});
-
-
-app.get('/app/flip/call/tails', (req, res) => {
-    res.send(flipACoin('tails'));
-});
-
-
-
-// Debugging endpoints
-if (debugEnabled) {
-
-    app.get('/app/log/access/',  (req, res) => {
-        try {
-            const stmt = db.prepare('SELECT * FROM accesslog').all()
-            res.status(200).json(stmt)
-        } catch {
-            console.error('could not retrieve database')
-        }
-    });
-
-    
-    app.get('/app/error',  (req, res) => {
-        throw new Error('Error test successful.')
-    });
-
-}
-
-
-// Default response for any other request
-app.use(function (req, res) {
-    res.status(404).send('404 NOT FOUND')
-});
-
-process.on('SIGTERM', () => {
-    server.close(() => {
-        console.log('Server stopped')
-    })
-})
