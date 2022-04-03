@@ -78,6 +78,7 @@ const server = app.listen(port, () => {
 });
 
 
+
 // Define check endpoint
 app.get('/app/', (req, res) => {
     // Respond with status 200
