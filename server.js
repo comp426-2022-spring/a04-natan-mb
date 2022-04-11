@@ -29,17 +29,24 @@ const port = args.port || process.env.PORT || 5000
 const express = require('express')
 const { exit } = require('process')
 
+const fs = require('fs')
+const morgan = require('morgan')
 const db = require('./database.js')
 
 var app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-const logEnabled = (args.log == undefined ? true : args.log)
+const logEnabled = (args.log == undefined ? true : args.log === 'true')
 const debugEnabled = (args.debug == undefined ? false : args.debug)
 
+
 // Middleware function
-const logger = function(req, res, next) {
+function logger(req, res, next) {
+
+ //   if(!logEnabled)
+ //       next()
+
     let logdata = {
         remoteaddr: req.ip,
         remoteuser: req.user,
@@ -74,10 +81,31 @@ const logger = function(req, res, next) {
     stmt.run(logdata)
 
     next()
+
+    // var accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
+    // app.use(morgan('combined', { stream: accesslogstream }))
+
 }
 
+var accesslogstream;
+
+//app.use(function(req, res, next){
+//    if (!logEnabled) {
+//        next()
+//    } else {
+//        accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
+//        morgan('combined', { stream: accesslogstream })(req, res, next)
+//        
+//        logger(req, res, next)
+//    }
+//    
+//});
+  
 if (logEnabled) {
     app.use(logger)
+
+    var accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
+    app.use(morgan('combined', { stream: accesslogstream }))
 }
 
 
