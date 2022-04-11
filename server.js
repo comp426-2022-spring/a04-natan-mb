@@ -55,7 +55,6 @@ app.use(function(req, res, next) {
         url: req.url,
         protocol: req.protocol,
         httpversion: req.httpVersion,
-        secure: (req.secure ? 1 : 0),
         status: res.statusCode,
         referer: req.headers['referer'],
         useragent: req.headers['user-agent']
@@ -71,7 +70,6 @@ app.use(function(req, res, next) {
             @url,
             @protocol,
             @httpversion,
-            @secure,
             @status,
             @referer,
             @useragent
@@ -82,22 +80,9 @@ app.use(function(req, res, next) {
 
     next()
 
-    // var accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
-    // app.use(morgan('combined', { stream: accesslogstream }))
 
 })
 
-//app.use(function(req, res, next){
-//    if (!logEnabled) {
-//        next()
-//    } else {
-//        accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
-//        morgan('combined', { stream: accesslogstream })(req, res, next)
-//        
-//        logger(req, res, next)
-//    }
-//    
-//});
   
 if (logEnabled) {
     var accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })

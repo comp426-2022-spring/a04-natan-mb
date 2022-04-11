@@ -29,7 +29,6 @@ if (row === undefined) {
             url TEXT,
             protocol TEXT,
             httpversion TEXT,
-            secure INTEGER,
             status INTEGER,
             referer TEXT,
             useragent TEXT     
