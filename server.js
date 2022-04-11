@@ -24,7 +24,7 @@ if (args.help) {
 }
 
 args['port']
-const port = args.port || process.env.PORT || 5000
+const port = args.port || process.env.PORT || 5555
 
 const express = require('express')
 const { exit } = require('process')
@@ -42,7 +42,7 @@ const debugEnabled = (args.debug == undefined ? false : args.debug)
 
 
 // Middleware function
-function logger(req, res, next) {
+app.use(function(req, res, next) {
 
  //   if(!logEnabled)
  //       next()
@@ -85,9 +85,7 @@ function logger(req, res, next) {
     // var accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
     // app.use(morgan('combined', { stream: accesslogstream }))
 
-}
-
-var accesslogstream;
+})
 
 //app.use(function(req, res, next){
 //    if (!logEnabled) {
@@ -102,8 +100,6 @@ var accesslogstream;
 //});
   
 if (logEnabled) {
-    app.use(logger)
-
     var accesslogstream = fs.createWriteStream('access.log', { flags: 'a' })
     app.use(morgan('combined', { stream: accesslogstream }))
 }
@@ -160,7 +156,7 @@ if (debugEnabled) {
             const stmt = db.prepare('SELECT * FROM accesslog').all()
             res.status(200).json(stmt)
         } catch {
-            console.error('could not retrieve database')
+            console.error('could not access database')
         }
     });
 
