@@ -61,7 +61,7 @@ app.use(function(req, res, next) {
     }
 
     const stmt = db.prepare(`
-        INSERT INTO accesslog
+        INSERT INTO accesslog (remoteaddr, remoteuser, time, method, url, protocol, httpversion, status, referer, useragent)
         VALUES (
             @remoteaddr,
             @remoteuser,
