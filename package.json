@@ -4,7 +4,7 @@
   "description": "coin flip simulator with logger",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node ./server.js/ --debug=true --log=true",
     "start": "node server.js"
   },
   "repository": {
